@@ -1,0 +1,13 @@
+{
+  "appId": "com.mahabbit.app",
+  "appName": "Ma Habbit",
+  "webDir": "www",
+  "backgroundColor": "#ECECF1",
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "backgroundColor": "#ECECF1",
+      "style": "LIGHT"
+    }
+  }
+}
