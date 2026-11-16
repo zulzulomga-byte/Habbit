@@ -13,11 +13,13 @@ write(`${RES}/values/mh_colors.xml`, `<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="mh_splash">#ECECF1</color>
     <color name="mh_icon_bg">#14141A</color>
+    <bool name="mh_light_bars">true</bool>
 </resources>
 `);
 write(`${RES}/values-night/mh_colors.xml`, `<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="mh_splash">#0E0E11</color>
+    <bool name="mh_light_bars">false</bool>
 </resources>
 `);
 write(`${RES}/drawable/mh_icon_fg.xml`, `<?xml version="1.0" encoding="utf-8"?>
@@ -54,7 +56,7 @@ const stylesPath = `${RES}/values/styles.xml`;
 let styles = read(stylesPath);
 const re = /(<style\s+name="AppTheme\.NoActionBar(?:Launch)?"[^>]*>)/g;
 if (!re.test(styles)) fail('style AppTheme.NoActionBar tidak ditemukan di styles.xml');
-styles = styles.replace(re, '$1\n        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>');
+styles = styles.replace(re, '$1\n        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>\n        <item name="android:statusBarColor">@color/mh_splash</item>\n        <item name="android:navigationBarColor">@color/mh_splash</item>\n        <item name="android:windowLightStatusBar">@bool/mh_light_bars</item>\n        <item name="android:windowLightNavigationBar">@bool/mh_light_bars</item>');
 styles = styles.replace(/@drawable\/splash\b/g, '@color/mh_splash');
 styles = styles.replace(/(<style\s+name="AppTheme\.NoActionBarLaunch"[^>]*>)/,
   '$1\n        <item name="windowSplashScreenBackground">@color/mh_splash</item>');
@@ -83,14 +85,56 @@ const pkg = (read(mains[0]).match(/^\s*package\s+([\w.]+);/m) || [])[1];
 if (!pkg) fail('package MainActivity tidak terbaca');
 write(mains[0], `package ${pkg};
 
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.Window;
+import android.webkit.JavascriptInterface;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+
+    private class Bars {
+        @JavascriptInterface
+        public void setBars(final String hex, final boolean dark) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int c = Color.parseColor(hex);
+                        Window w = getWindow();
+                        w.setStatusBarColor(c);
+                        w.setNavigationBarColor(c);
+                        WindowInsetsControllerCompat ctl = WindowCompat.getInsetsController(w, w.getDecorView());
+                        if (ctl != null) {
+                            ctl.setAppearanceLightStatusBars(!dark);
+                            ctl.setAppearanceLightNavigationBars(!dark);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        try {
+            getBridge().getWebView().addJavascriptInterface(new Bars(), "MhNative");
+        } catch (Throwable ignored) {
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
         try {
-            getBridge().getWebView().getSettings().setTextZoom(100);
+            android.webkit.WebView wv = getBridge().getWebView();
+            wv.getSettings().setTextZoom(100);
+            wv.setVerticalScrollBarEnabled(false);
+            wv.setHorizontalScrollBarEnabled(false);
         } catch (Throwable ignored) {
         }
     }

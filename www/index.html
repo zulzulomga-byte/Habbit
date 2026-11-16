@@ -38,6 +38,7 @@ window.__nat={cache:{},
  --violet-s:#2B2852;--lime-s:#2F3B12;--sky-s:#172B4E;--coral-s:#4B221D;--amber-s:#4B3216;--mint-s:#10392C;--pink-s:#47213F;--navy:#33449B;--navy-s:#1E2A5A;--blue-s:#1A2658;
  --hero:#3A3577;--hero-full:#394A0E;--hero-ink:#F3F3F7;--hero-trk:rgba(255,255,255,.14);color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0}
 html.lock,html.lock body{overflow:hidden}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 'Onest',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;
  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));transition:background .4s,color .4s}
@@ -1335,9 +1336,10 @@ window.__mh={back:function(){try{if(UI.sheet){closeSheet();return true}}catch(e)
 (function(){var n=window.__nat;if(!n||!n.isNative())return;
  var root=document.documentElement,last='';
  function dark(){var a=root.getAttribute('data-theme');return a?a==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
- function bar(){try{var SB=n.p('StatusBar');if(!SB)return;var c=getComputedStyle(root).getPropertyValue('--bg').trim();if(!/^#[0-9a-f]{6}$/i.test(c))return;
-  var k=c+(dark()?'D':'L');if(k===last)return;last=k;
-  SB.setOverlaysWebView({overlay:false});SB.setBackgroundColor({color:c});SB.setStyle({style:dark()?'DARK':'LIGHT'})}catch(e){}}
+ function bar(){try{var c=getComputedStyle(root).getPropertyValue('--bg').trim();if(!/^#[0-9a-f]{6}$/i.test(c))return;
+  var d=dark(),k=c+(d?'D':'L');if(k===last)return;last=k;
+  if(window.MhNative&&MhNative.setBars){MhNative.setBars(c,d);return}
+  var SB=n.p('StatusBar');if(!SB)return;SB.setBackgroundColor({color:c});SB.setStyle({style:d?'DARK':'LIGHT'})}catch(e){}}
  try{new MutationObserver(bar).observe(root,{attributes:true,attributeFilter:['data-theme']})}catch(e){}
  try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',bar)}catch(e){}
  document.addEventListener('visibilitychange',function(){if(!document.hidden){last='';bar()}});
